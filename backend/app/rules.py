@@ -11,6 +11,8 @@ check_type:
 
 from dataclasses import dataclass
 
+from app.schemas import Finding
+
 FIXED = "กฎตายตัว"
 JUDGMENT = "วิจารณญาณ"
 
@@ -43,3 +45,24 @@ RULES: list[Rule] = [
 
 RULES_BY_ID: dict[str, Rule] = {r.rule_id: r for r in RULES}
 RULE_IDS: frozenset[str] = frozenset(RULES_BY_ID)
+
+
+def filter_findings(findings: list[Finding]) -> list[Finding]:
+    """คัดกรองการอ้างอิง (spec §9): hard filter ในโค้ด ไม่ใช่ prompt.
+
+    - ทิ้งข้อค้นพบที่อ้าง rule_id ซึ่งไม่มีจริงใน registry (กันการอ้างกฎมั่ว
+      ที่ทำลายความน่าเชื่อถือทั้งระบบ)
+    - ตัดรายการซ้ำด้วยคู่ (topic_location, rule_id)
+    - รักษาลำดับเดิมของข้อค้นพบที่ผ่าน
+    """
+    seen: set[tuple[str, str]] = set()
+    kept: list[Finding] = []
+    for f in findings:
+        if f.rule_id not in RULE_IDS:
+            continue
+        key = (f.topic_location, f.rule_id)
+        if key in seen:
+            continue
+        seen.add(key)
+        kept.append(f)
+    return kept
