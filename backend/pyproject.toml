@@ -1,0 +1,17 @@
+[project]
+name = "tordit-backend"
+version = "0.1.0"
+description = "TORDIT backend - ตรวจเอกสาร TOR งานจัดซื้อจัดจ้างภาครัฐ (MVP งานจ้างทั่วไป แบบเต็ม)"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+api = ["fastapi", "uvicorn", "python-multipart", "pypdf"]
+llm = ["langchain-core", "langchain-anthropic"]
+dev = ["pytest", "httpx"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
