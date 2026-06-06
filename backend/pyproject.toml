@@ -8,8 +8,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-api = ["fastapi", "uvicorn", "python-multipart", "pypdf"]
-llm = ["langchain-core", "langchain-anthropic"]
+api = ["fastapi", "uvicorn", "python-multipart", "pypdf", "pdf2image", "httpx"]
+llm = ["langchain", "langchain-core", "langchain-anthropic", "langchain-google-genai"]
 dev = ["pytest", "httpx"]
 
 [tool.pytest.ini_options]

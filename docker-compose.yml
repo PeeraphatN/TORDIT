@@ -1,0 +1,39 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./docs:/docs:ro
+    env_file:
+      - ./backend/.env
+    networks:
+      - tordit
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - tordit
+
+  frontend-v2:
+    build:
+      context: ./frontend-v2
+      args:
+        NEXT_PUBLIC_API_URL: http://backend:8000
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    networks:
+      - tordit
+
+networks:
+  tordit:
+    driver: bridge
