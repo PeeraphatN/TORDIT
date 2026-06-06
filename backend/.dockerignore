@@ -1,0 +1,7 @@
+.venv
+__pycache__
+*.pyc
+*.egg-info
+.pytest_cache
+tor_p0.png
+tor_p0_out.txt

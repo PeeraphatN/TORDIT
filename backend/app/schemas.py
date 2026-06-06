@@ -22,6 +22,9 @@ class Finding(BaseModel):
     rule_id: str
     citation: str
     suggested_fix: str
+    # เพิ่มเพื่อความน่าเชื่อถือ (เติมโดย apply_references ไม่ใช่โมเดล):
+    evidence: str | None = None    # ข้อความตรงคำจาก TOR ที่เป็นหลักฐาน (verify แล้วว่ามีจริง)
+    provision: str | None = None   # ตัวบทกฎหมายจริงของ rule_id ให้เจ้าหน้าที่กดดู
 
 
 class CheckStatus(str, Enum):

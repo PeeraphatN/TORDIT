@@ -1,6 +1,6 @@
 from app.rules import RULES, RULE_IDS, RULES_BY_ID, Rule
 
-# กฎ 15 ข้อสำหรับ MVP (งานจ้างทั่วไป แบบเต็ม) ตาม spec.md §11
+# กฎ 15 ข้อ MVP ตาม spec.md §11 + NUM-1 (ตรวจทศนิยมจำนวนเงิน ตามคำขอเจ้าของงาน) = 16
 EXPECTED_IDS = {
     "STRUCT-1", "STRUCT-2", "STRUCT-3",
     "QUAL-1", "QUAL-2",
@@ -10,11 +10,12 @@ EXPECTED_IDS = {
     "DATE-1",
     "PAY-1", "PAY-2",
     "COHERE-1",
+    "NUM-1",
 }
 
 
-def test_registry_has_exactly_the_15_mvp_rules():
-    assert len(RULES) == 15
+def test_registry_has_exactly_the_mvp_rules():
+    assert len(RULES) == 16
     assert set(RULE_IDS) == EXPECTED_IDS
 
 
