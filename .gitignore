@@ -5,3 +5,8 @@ __pycache__/
 .DS_Store
 .env
 *.egg-info/
+
+# AI/tooling config (local only)
+.agents/
+.claude/
+.impeccable/
