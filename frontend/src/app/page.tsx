@@ -224,26 +224,26 @@ export default function UploadPage() {
               </select>
             </div>
             <div>
-              <label
-                htmlFor="form-variant"
-                className="block text-xs font-medium text-gray-600 mb-1.5"
-              >
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">
                 รูปแบบ TOR
               </label>
-              <select
-                id="form-variant"
-                value={form}
-                onChange={(e) => setForm(e.target.value)}
-                className={cn(
-                  "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800",
-                  "focus:outline-none focus:border-[#C23680] focus:shadow-[0_0_0_3px_rgba(194,54,128,0.15)]",
-                  "transition-[border-color,box-shadow] duration-150"
-                )}
-              >
+              <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-1 gap-1">
                 {FORMS.map((f) => (
-                  <option key={f.value} value={f.value}>{f.label}</option>
+                  <button
+                    key={f.value}
+                    type="button"
+                    onClick={() => setForm(f.value)}
+                    className={cn(
+                      "flex-1 rounded-md py-1.5 text-sm font-medium transition-colors duration-150",
+                      form === f.value
+                        ? "bg-white text-[#C23680] shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    )}
+                  >
+                    {f.label}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
 
