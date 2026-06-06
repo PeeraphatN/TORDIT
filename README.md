@@ -8,7 +8,7 @@
 
 | Layer    | Tech                                        |
 | -------- | ------------------------------------------- |
-| Backend  | Python 3.12 · FastAPI · Typhoon API (LLM)   |
+| Backend  | Python 3.12 · FastAPI · Gemini (LLM) · Typhoon OCR |
 | Frontend | Next.js 15 · TypeScript · Tailwind CSS      |
 | Infra    | Docker Compose                              |
 
@@ -17,7 +17,7 @@
 ```bash
 # 1. Copy environment file
 cp backend/.env.example backend/.env
-# แก้ไข TYPHOON_API_KEY ใน backend/.env
+# แก้ไข GOOGLE_API_KEY ใน backend/.env (จำเป็นเมื่อ LLM_MODE=live)
 
 # 2. Start all services
 docker compose up --build
@@ -58,8 +58,8 @@ Returns `CheckResult` with `status: "done"` or `"error"` and a list of findings.
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-cp .env.example .env   # set TYPHOON_API_KEY
+pip install -e ".[api,llm,dev]"
+cp .env.example .env   # set GOOGLE_API_KEY
 
 uvicorn app.main:app --reload
 ```
@@ -86,11 +86,15 @@ npm run dev
 
 ## Environment Variables
 
-See `backend/.env.example` for the full list. Required:
+See `backend/.env.example` for the full list. Key variables:
 
-| Variable          | Description                     |
-| ----------------- | ------------------------------- |
-| `TYPHOON_API_KEY` | API key for Typhoon (OCR + LLM) |
+| Variable              | Default            | Description                                                  |
+| --------------------- | ------------------ | ------------------------------------------------------------ |
+| `LLM_MODE`            | `live`             | `mock` คืน findings ตัวอย่าง (ไม่ต้องมี key) / `live` ยิงโมเดลจริง |
+| `LLM_PROVIDER`        | `google_genai`     | provider ของ LLM (สลับเป็น `anthropic` ได้)                    |
+| `LLM_MODEL`           | `gemini-2.5-flash` | model id ของ provider นั้น                                      |
+| `GOOGLE_API_KEY`      | —                  | จำเป็นเมื่อ `LLM_MODE=live` + provider `google_genai`            |
+| `TYPHOON_OCR_API_KEY` | —                  | ไม่บังคับ — OCR สำหรับ PDF ที่เป็นรูป (image-based)              |
 
 ## Project Structure
 
@@ -99,17 +103,22 @@ backend/
   app/
     main.py       # FastAPI app, endpoints
     checker.py    # Orchestrates the full check pipeline
+    pdf.py        # PDF → text extraction (+ Typhoon OCR fallback)
     extract.py    # Builds structured context from raw text
     rules.py      # Compliance rule definitions
-    llm.py        # Typhoon API client
-    pdf.py        # PDF → text extraction
+    reference.py  # Official legal citations applied to findings
+    fewshot.py    # Few-shot examples for the LLM prompt
+    prompt.py     # System + user prompt builders
+    llm.py        # LLM client (LangChain, provider-swappable)
     schemas.py    # Pydantic models
+    jobs.py       # In-memory job/result store
   tests/          # Unit + integration tests
 
 frontend/
   src/
     app/          # Next.js pages (upload + result)
     components/   # FindingCard, FindingsPanel
+    lib/          # Shared utilities
     types/        # API response types
 
 docker-compose.yml
