@@ -10,3 +10,6 @@ __pycache__/
 .agents/
 .claude/
 .impeccable/
+
+# Temporary frontend copy for visual comparison
+frontend-v2/
