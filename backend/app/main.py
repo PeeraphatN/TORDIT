@@ -73,6 +73,8 @@ if os.getenv("ENABLE_DEBUG_ENDPOINTS", "").lower() in {"1", "true", "yes"}:
         form: str = Form(default="เต็ม"),
     ) -> dict:
         content = await file.read()
+        if len(content) > _MAX_BYTES:
+            raise HTTPException(status_code=422, detail="file too large (max 5 MB)")
         text = await asyncio.to_thread(extract_text, content)
         ctx = build_context(text, procurement_type, form)
         return {

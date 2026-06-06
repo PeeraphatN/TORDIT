@@ -51,7 +51,7 @@ export default function FindingsPanel({ findings, procurementType, form }: Findi
                 </div>
               )}
               {improvements.length > 0 && (
-                <div className="flex items-center gap-1 text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">
+                <div className="flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1 rounded-full">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   ควรปรับปรุง {improvements.length} ข้อ
                 </div>
@@ -72,7 +72,7 @@ export default function FindingsPanel({ findings, procurementType, form }: Findi
         ) : (
           Object.entries(grouped).map(([topic, topicFindings]) => (
             <div key={topic}>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <h3 className="text-xs font-semibold text-gray-700 mb-2">
                 {topic}
               </h3>
               <div className="space-y-2">

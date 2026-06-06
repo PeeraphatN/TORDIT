@@ -34,7 +34,7 @@ export default function FindingCard({ finding }: FindingCardProps) {
         "rounded-lg border text-sm overflow-hidden",
         isViolation
           ? "border-red-200 bg-red-50"
-          : "border-yellow-200 bg-yellow-50"
+          : "border-amber-200 bg-amber-50"
       )}
     >
       {/* Header row */}
@@ -46,7 +46,7 @@ export default function FindingCard({ finding }: FindingCardProps) {
           {isViolation ? (
             <AlertCircle className="w-4 h-4 text-red-500" />
           ) : (
-            <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            <AlertTriangle className="w-4 h-4 text-amber-600" />
           )}
         </span>
         <div className="flex-1 min-w-0">
@@ -56,7 +56,7 @@ export default function FindingCard({ finding }: FindingCardProps) {
                 "text-xs font-semibold px-1.5 py-0.5 rounded",
                 isViolation
                   ? "bg-red-100 text-red-700"
-                  : "bg-yellow-100 text-yellow-700"
+                  : "bg-amber-100 text-amber-700"
               )}
             >
               {finding.severity}
@@ -83,7 +83,7 @@ export default function FindingCard({ finding }: FindingCardProps) {
                 หลักฐานในเอกสาร
                 <span className="text-[10px] text-green-600 font-normal">· พบในเอกสาร ✓</span>
               </span>
-              <blockquote className="mt-1 border-l-2 border-gray-300 bg-white/60 pl-2 py-1 text-xs text-gray-700 italic leading-relaxed">
+              <blockquote className="mt-1 bg-white/60 border border-gray-100 rounded-md px-2 py-1.5 text-xs text-gray-700 italic leading-relaxed">
                 “{finding.evidence}”
               </blockquote>
             </div>
@@ -96,7 +96,7 @@ export default function FindingCard({ finding }: FindingCardProps) {
               <>
                 <button
                   onClick={() => setShowLaw((v) => !v)}
-                  className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                  className="mt-1 flex items-center gap-1 text-xs text-[#C23680] hover:text-[#A22D6B] transition-colors"
                 >
                   <BookOpen className="w-3 h-3" />
                   {showLaw ? "ซ่อนตัวบทกฎหมาย" : "ดูตัวบทกฎหมาย"}

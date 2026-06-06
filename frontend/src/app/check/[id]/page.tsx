@@ -3,6 +3,7 @@
 import { use, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import FindingsPanel from "@/components/FindingsPanel"
 import type { CheckResult } from "@/types/api"
 
@@ -21,6 +22,7 @@ export default function CheckPage({ params }: Props) {
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [filename, setFilename] = useState<string>("เอกสาร TOR")
+  const [activeTab, setActiveTab] = useState<"findings" | "pdf">("findings")
 
   // Retrieve stored PDF blob URL from sessionStorage (set by upload page)
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function CheckPage({ params }: Props) {
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <span className="text-sm font-medium text-gray-800 truncate">{filename}</span>
           {isProcessing && (
-            <div className="flex items-center gap-1 text-xs text-blue-500">
+            <div className="flex items-center gap-1 text-xs text-[#C23680]">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               กำลังตรวจสอบ…
             </div>
@@ -90,10 +92,41 @@ export default function CheckPage({ params }: Props) {
         </div>
       </header>
 
-      {/* Main split layout */}
+      {/* Mobile tab bar — hidden on lg+ where both panels are always visible */}
+      <div className="lg:hidden shrink-0 flex border-b border-gray-200 bg-white">
+        <button
+          onClick={() => setActiveTab("findings")}
+          className={cn(
+            "flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+            activeTab === "findings"
+              ? "text-[#C23680] border-[#C23680]"
+              : "text-gray-500 border-transparent hover:text-gray-700"
+          )}
+        >
+          ผลการตรวจ
+        </button>
+        <button
+          onClick={() => setActiveTab("pdf")}
+          className={cn(
+            "flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+            activeTab === "pdf"
+              ? "text-[#C23680] border-[#C23680]"
+              : "text-gray-500 border-transparent hover:text-gray-700"
+          )}
+        >
+          เอกสาร
+        </button>
+      </div>
+
+      {/* Main content: split on desktop, single-panel on mobile */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: PDF viewer */}
-        <div className="flex-1 overflow-hidden bg-gray-100 border-r border-gray-200">
+        <div
+          className={cn(
+            "overflow-hidden bg-gray-100 lg:border-r lg:border-gray-200",
+            activeTab === "pdf" ? "flex flex-1" : "hidden lg:flex lg:flex-1"
+          )}
+        >
           {pdfUrl ? (
             <embed
               src={pdfUrl}
@@ -101,21 +134,26 @@ export default function CheckPage({ params }: Props) {
               className="w-full h-full"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-full w-full text-gray-400 text-sm">
               ไม่พบไฟล์ PDF (อาจหมดอายุหลังรีเฟรชหน้า)
             </div>
           )}
         </div>
 
         {/* Right: Findings panel */}
-        <div className="w-96 shrink-0 flex flex-col bg-white overflow-hidden">
+        <div
+          className={cn(
+            "flex-col bg-white overflow-hidden lg:w-96 lg:shrink-0",
+            activeTab === "findings" ? "flex flex-1 lg:flex-none" : "hidden lg:flex"
+          )}
+        >
           {fetchError ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 p-6 text-center">
               <AlertCircle className="w-8 h-8 text-red-400" />
               <p className="text-sm text-red-600 font-medium">{fetchError}</p>
               <button
                 onClick={() => router.push("/")}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-[#C23680] hover:text-[#A22D6B] transition-colors"
               >
                 กลับไปอัปโหลดใหม่
               </button>
@@ -129,10 +167,10 @@ export default function CheckPage({ params }: Props) {
             </div>
           ) : isProcessing ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
-              <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+              <Loader2 className="w-8 h-8 text-[#C23680] animate-spin" />
               <div>
                 <p className="text-sm font-medium text-gray-700">กำลังตรวจสอบเอกสาร…</p>
-                <p className="text-xs text-gray-400 mt-1">AI กำลังวิเคราะห์ TOR อาจใช้เวลา 30–60 วินาที</p>
+                <p className="text-xs text-gray-400 mt-1">อาจใช้เวลา 1–3 นาที สำหรับเอกสาร scan ที่ต้องผ่าน OCR</p>
               </div>
             </div>
           ) : (
