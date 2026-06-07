@@ -61,10 +61,9 @@ export default function FindingCard({ finding }: FindingCardProps) {
             >
               {finding.severity}
             </span>
-            <span className="text-xs text-gray-500 font-mono">{finding.rule_id}</span>
           </div>
-          <p className="mt-1 text-gray-800 font-medium leading-snug line-clamp-2">
-            {finding.description}
+          <p className="mt-1 text-gray-800 font-medium leading-snug">
+            {finding.topic_location}
           </p>
         </div>
         <span className="shrink-0 mt-0.5 text-gray-400">
@@ -75,6 +74,11 @@ export default function FindingCard({ finding }: FindingCardProps) {
       {/* Expanded detail */}
       {open && (
         <div className="px-3 pb-3 space-y-2.5 border-t border-black/5 pt-2">
+          {/* Description — คำอธิบายข้อผิดพลาดเต็ม */}
+          <div>
+            <span className="text-xs font-medium text-gray-500">คำอธิบายข้อผิดพลาด</span>
+            <p className="text-xs text-gray-700 mt-0.5 leading-relaxed">{finding.description}</p>
+          </div>
           {/* Evidence — ข้อความตรงคำจากเอกสาร ที่ระบบ verify แล้วว่ามีอยู่จริง */}
           {finding.evidence && (
             <div>
@@ -112,12 +116,6 @@ export default function FindingCard({ finding }: FindingCardProps) {
           <div>
             <span className="text-xs font-medium text-gray-500">คำแนะนำ</span>
             <p className="text-xs text-gray-700 mt-0.5 leading-relaxed">{finding.suggested_fix}</p>
-          </div>
-          <div>
-            <span className="text-xs font-medium text-gray-500">ประเภทข้อผิด</span>
-            <p className="text-xs text-gray-600 mt-0.5">
-              {finding.error_class} — {ERROR_CLASS_LABEL[finding.error_class] ?? "ไม่ระบุ"}
-            </p>
           </div>
         </div>
       )}

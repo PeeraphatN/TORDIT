@@ -71,15 +71,10 @@ export default function FindingsPanel({ findings, procurementType, form }: Findi
           </div>
         ) : (
           Object.entries(grouped).map(([topic, topicFindings]) => (
-            <div key={topic}>
-              <h3 className="text-xs font-semibold text-gray-700 mb-2">
-                {topic}
-              </h3>
-              <div className="space-y-2">
-                {topicFindings.map((f, i) => (
-                  <FindingCard key={`${f.rule_id}-${i}`} finding={f} />
-                ))}
-              </div>
+            <div key={topic} className="space-y-2">
+              {topicFindings.map((f, i) => (
+                <FindingCard key={`${f.rule_id}-${i}`} finding={f} />
+              ))}
             </div>
           ))
         )}
