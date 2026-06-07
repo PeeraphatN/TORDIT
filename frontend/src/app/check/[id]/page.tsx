@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils"
 import FindingsPanel from "@/components/FindingsPanel"
 import type { CheckResult } from "@/types/api"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 const POLL_INTERVAL_MS = 2000
+const DEMO_ID = "demo"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -35,11 +35,20 @@ export default function CheckPage({ params }: Props) {
   // Poll until completed or failed
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
+    // Demo mode: load fixture data on demand — not bundled in production.
+    if (id === DEMO_ID) {
+      let active = true
+      import("@/lib/mockCheck").then(({ MOCK_CHECK_RESULT }) => {
+        if (active) setResult(MOCK_CHECK_RESULT)
+      })
+      return () => { active = false }
+    }
+
     let cancelled = false
 
     const poll = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/check/${id}`)
+        const res = await fetch(`/api/v1/check/${id}`)
         if (!res.ok) throw new Error(`ไม่พบรายการตรวจ (${res.status})`)
         const data: CheckResult = await res.json()
         if (!cancelled) {
@@ -135,7 +144,9 @@ export default function CheckPage({ params }: Props) {
             />
           ) : (
             <div className="flex items-center justify-center h-full w-full text-gray-400 text-sm">
-              ไม่พบไฟล์ PDF (อาจหมดอายุหลังรีเฟรชหน้า)
+              {id === DEMO_ID
+                ? "โหมด Demo — ไม่มีเอกสาร PDF"
+                : "ไม่พบไฟล์ PDF (อาจหมดอายุหลังรีเฟรชหน้า)"}
             </div>
           )}
         </div>

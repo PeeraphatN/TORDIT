@@ -60,7 +60,7 @@ export default function UploadPage() {
       fd.append("form", form)
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/v1/check`,
+        `/api/v1/check`,
         { method: "POST", body: fd }
       )
       if (!res.ok) {
