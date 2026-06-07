@@ -26,6 +26,9 @@ architecture.md
 backend/tor_p0.png
 backend/tor_p0_out.txt
 
+# Dummy/evaluation data (local only)
+DUMMY DATA/
+
 # AI agent instructions (editor-local)
 frontend/AGENTS.md
 frontend/CLAUDE.md

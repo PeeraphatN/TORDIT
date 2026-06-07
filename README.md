@@ -92,7 +92,7 @@ See `backend/.env.example` for the full list. Key variables:
 | --------------------- | ------------------ | ------------------------------------------------------------ |
 | `LLM_MODE`            | `live`             | `mock` คืน findings ตัวอย่าง (ไม่ต้องมี key) / `live` ยิงโมเดลจริง |
 | `LLM_PROVIDER`        | `google_genai`     | provider ของ LLM (สลับเป็น `anthropic` ได้)                    |
-| `LLM_MODEL`           | `gemini-2.5-flash` | model id ของ provider นั้น                                      |
+| `LLM_MODEL`           | `gemini-3.5-flash` | model id ของ provider นั้น                                      |
 | `GOOGLE_API_KEY`      | —                  | จำเป็นเมื่อ `LLM_MODE=live` + provider `google_genai`            |
 | `TYPHOON_OCR_API_KEY` | —                  | ไม่บังคับ — OCR สำหรับ PDF ที่เป็นรูป (image-based)              |
 
