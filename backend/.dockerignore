@@ -4,6 +4,8 @@ __pycache__
 *.egg-info
 .pytest_cache
 tests
+eval
 tor_p0.png
 tor_p0_out.txt
 .env
+.env.example
