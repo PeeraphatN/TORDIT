@@ -5,17 +5,19 @@ import { useRouter } from "next/navigation"
 import { Upload, FileText, Loader2, X, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+// MVP รองรับเฉพาะงานจ้างทั่วไป แบบเต็ม (ตรงกับขอบเขตใน backend/app/prompt.py)
+// ตัวเลือกอื่นโชว์เป็น roadmap แต่ยังเลือกไม่ได้ กันส่งเอกสารนอก scope ที่ทำให้ผลตรวจเพี้ยน
 const PROCUREMENT_TYPES = [
-  { value: "จ้างทั่วไป", label: "งานจ้างทั่วไป" },
-  { value: "ซื้อ", label: "งานซื้อ" },
-  { value: "เช่า", label: "งานเช่า" },
-  { value: "จ้างก่อสร้าง", label: "งานจ้างก่อสร้าง" },
-  { value: "จ้างที่ปรึกษา", label: "งานจ้างที่ปรึกษา" },
+  { value: "จ้างทั่วไป", label: "งานจ้างทั่วไป", supported: true },
+  { value: "ซื้อ", label: "งานซื้อ", supported: false },
+  { value: "เช่า", label: "งานเช่า", supported: false },
+  { value: "จ้างก่อสร้าง", label: "งานจ้างก่อสร้าง", supported: false },
+  { value: "จ้างที่ปรึกษา", label: "งานจ้างที่ปรึกษา", supported: false },
 ]
 
 const FORMS = [
-  { value: "เต็ม", label: "แบบเต็ม" },
-  { value: "ย่อ", label: "แบบย่อ" },
+  { value: "เต็ม", label: "แบบเต็ม", supported: true },
+  { value: "ย่อ", label: "แบบย่อ", supported: false },
 ]
 
 export default function UploadPage() {
@@ -219,7 +221,9 @@ export default function UploadPage() {
                 )}
               >
                 {PROCUREMENT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                  <option key={t.value} value={t.value} disabled={!t.supported}>
+                    {t.label}{t.supported ? "" : " (เร็วๆ นี้)"}
+                  </option>
                 ))}
               </select>
             </div>
@@ -232,15 +236,19 @@ export default function UploadPage() {
                   <button
                     key={f.value}
                     type="button"
-                    onClick={() => setForm(f.value)}
+                    disabled={!f.supported}
+                    title={f.supported ? undefined : "รองรับเร็วๆ นี้"}
+                    onClick={() => f.supported && setForm(f.value)}
                     className={cn(
                       "flex-1 rounded-md py-1.5 text-sm font-medium transition-colors duration-150",
                       form === f.value
                         ? "bg-white text-[#C23680] shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
+                        : f.supported
+                          ? "text-gray-500 hover:text-gray-700"
+                          : "text-gray-300 cursor-not-allowed"
                     )}
                   >
-                    {f.label}
+                    {f.label}{f.supported ? "" : " · เร็วๆ นี้"}
                   </button>
                 ))}
               </div>
