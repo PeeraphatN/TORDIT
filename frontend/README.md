@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TORDIT — Frontend
 
-## Getting Started
+Next.js 15 (App Router, TypeScript, Tailwind) UI for the TORDIT TOR-compliance checker.
+See the [root README](../README.md) for the full system overview.
 
-First, run the development server:
+## What it does
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Upload page** (`src/app/page.tsx`) — drag-and-drop a TOR PDF, pick procurement type / form
+  (MVP: `งานจ้างทั่วไป` / `แบบเต็ม`), and submit to `POST /api/v1/check`.
+- **Result page** (`src/app/check/[id]/page.tsx`) — polls `GET /api/v1/check/{id}` until the status
+  is `completed` or `failed`, then renders findings grouped by TOR section.
+- **Components** — `FindingCard` (expandable, severity-coded, rule ID + citation) and `FindingsPanel`.
+
+## Backend connection
+
+The browser calls same-origin `/api/*`; Next.js rewrites those to the backend (`next.config.ts`):
+
+```ts
+source: "/api/:path*"  →  `${BACKEND_URL ?? "http://localhost:8000"}/api/:path*`
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `BACKEND_URL` at build/run time (in Docker it's `http://backend:8000`). The backend is never
+exposed to the browser directly.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Develop
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev      # http://localhost:3000  (expects the backend on :8000)
+```
 
-## Learn More
+Other scripts: `npm run build` · `npm run start` · `npm run lint`.
 
-To learn more about Next.js, take a look at the following resources:
+**Demo mode:** opening `/check/<DEMO_ID>` loads fixture findings from `src/lib/mockCheck.ts` instead
+of polling the backend — useful for UI work without a running API. The fixture is loaded on demand
+and not bundled into the production build.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Build notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `output: "standalone"` — produces a self-contained server bundle for the Docker image.
+- Font: [Geist](https://vercel.com/font) via `next/font`.
