@@ -21,10 +21,11 @@ from __future__ import annotations
 
 import os
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.extract import CheckContext
 from app.prompt import build_system_prompt, format_user_message
+from app.rules import RULE_ID_VALUES
 from app.schemas import Finding, Severity
 
 DEFAULT_PROVIDER = "anthropic"
@@ -32,10 +33,61 @@ DEFAULT_MODEL = "claude-sonnet-4-6"
 _MAX_TOKENS = 8192
 
 
-class _FindingList(BaseModel):
+class _LLMFinding(BaseModel):
+    """Lenient schema สำหรับ parse LLM output — ทุก field มี default เพื่อรับ partial output.
+
+    LLM บางครั้งไม่ส่ง rule_id/citation มา หรือส่ง error_class/severity ผิดรูปแบบ
+    schema นี้รับ partial output แล้ว to_finding() กรองออกเองแทนที่จะให้ Pydantic crash ทั้ง list.
+    """
+
+    error_class: int = 4
+    severity: Severity = Severity.IMPROVEMENT
+    topic_location: str = ""
+    description: str = ""
+    # enum ใน schema ชี้นำ Gemini ให้เลือก rule_id ที่มีจริง (ลด omission + hallucination ตั้งแต่
+    # ตอน generate) แต่ type ยังเป็น str + optional → ถ้าหลุดกรอบ parse ไม่ crash, filter_findings
+    # เป็นตาข่ายสุดท้าย (defense-in-depth)
+    rule_id: str = Field(default="", json_schema_extra={"enum": list(RULE_ID_VALUES)})
+    citation: str = ""
+    suggested_fix: str = ""
+    evidence: str | None = None
+
+    @field_validator("error_class", mode="before")
+    @classmethod
+    def clamp_error_class(cls, v: object) -> int:
+        try:
+            return max(1, min(4, int(v)))  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return 4
+
+    @field_validator("severity", mode="before")
+    @classmethod
+    def coerce_severity(cls, v: object) -> Severity:
+        try:
+            return Severity(v)
+        except (ValueError, TypeError):
+            return Severity.IMPROVEMENT
+
+    def to_finding(self) -> Finding | None:
+        """แปลงเป็น Finding — คืน None ถ้า field สำคัญหายไป (จะถูกกรองออกก่อน filter_findings)."""
+        if not self.topic_location or not self.description:
+            return None
+        return Finding(
+            error_class=self.error_class,
+            severity=self.severity,
+            topic_location=self.topic_location,
+            description=self.description,
+            rule_id=self.rule_id,
+            citation=self.citation,
+            suggested_fix=self.suggested_fix,
+            evidence=self.evidence,
+        )
+
+
+class _LLMFindingList(BaseModel):
     """container สำหรับ structured output (top-level array ไม่เหมาะเป็น tool schema)."""
 
-    findings: list[Finding] = Field(default_factory=list)
+    findings: list[_LLMFinding] = Field(default_factory=list)
 
 
 # findings ตัวอย่างตาม Contract (team_brief §4) ครอบ error_class หลายแบบ + severity ทั้งสองค่า
@@ -78,14 +130,14 @@ async def generate_findings(context: CheckContext) -> list[Finding]:
     if os.getenv("LLM_MODE", "mock").lower() == "mock":
         return [f.model_copy() for f in _MOCK_FINDINGS]
 
-    model = _build_model().with_structured_output(_FindingList)
-    result: _FindingList = await model.ainvoke(
+    model = _build_model().with_structured_output(_LLMFindingList)
+    result: _LLMFindingList = await model.ainvoke(
         [
             ("system", build_system_prompt()),
             ("human", format_user_message(context)),
         ]
     )
-    return list(result.findings)
+    return [f for llm_f in result.findings if (f := llm_f.to_finding()) is not None]
 
 
 def _build_model():

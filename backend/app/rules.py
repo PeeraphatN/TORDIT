@@ -70,6 +70,7 @@ RULES: list[Rule] = [
 
 RULES_BY_ID: dict[str, Rule] = {r.rule_id: r for r in RULES}
 RULE_IDS: frozenset[str] = frozenset(RULES_BY_ID)
+RULE_ID_VALUES: tuple[str, ...] = tuple(r.rule_id for r in RULES)  # ลำดับคงที่ → ป้อน enum ใน schema
 
 
 def filter_findings(findings: list[Finding]) -> list[Finding]:
