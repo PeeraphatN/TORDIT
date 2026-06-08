@@ -6,8 +6,8 @@ provider/model สลับได้ด้วย env เปลี่ยนเอ
                 mock = คืน findings ตัวอย่างตาม Contract (ไม่ต้องมี API key)
                        ปลดล็อก frontend ให้ต่อ flow ได้ทันที (team_brief §3)
                 live = ยิงโมเดลจริง
-  LLM_PROVIDER  anthropic | openai | ...   default = anthropic
-  LLM_MODEL     model id      default = claude-sonnet-4-6
+  LLM_PROVIDER  google_genai | anthropic | openai | ...   default = google_genai
+  LLM_MODEL     model id      default = gemini-3.5-flash
   <PROVIDER>_API_KEY ตาม provider เช่น ANTHROPIC_API_KEY
 
 สลับ provider = แก้ LLM_PROVIDER + LLM_MODEL + ตั้ง API key ของ provider นั้น
@@ -28,8 +28,8 @@ from app.prompt import build_system_prompt, format_user_message
 from app.rules import RULE_ID_VALUES
 from app.schemas import Finding, Severity
 
-DEFAULT_PROVIDER = "anthropic"
-DEFAULT_MODEL = "claude-sonnet-4-6"
+DEFAULT_PROVIDER = "google_genai"
+DEFAULT_MODEL = "gemini-3.5-flash"
 _MAX_TOKENS = 8192
 
 
