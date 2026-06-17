@@ -1,4 +1,6 @@
 import io
+import json
+import random
 
 from pypdf import PdfReader
 
@@ -7,9 +9,50 @@ from pypdf import PdfReader
 _MAITAIKHU_SARA_A = "ํา"
 _SARA_AM = "ำ"
 
+# Typhoon OCR (typhoon-ocr): จำกัด 2 requests/วินาที และ 20 requests/นาที
+# (https://docs.opentyphoon.ai/en/rate-limits/) เกินกว่านี้ตอบ 429 ทันที
+# default concurrency = 2 จึงไม่ละเมิด RPS — ปรับด้วย TYPHOON_OCR_CONCURRENCY ได้ถ้าเปลี่ยน tier
+_DEFAULT_OCR_CONCURRENCY = 2
+_RETRYABLE_STATUS = (429, 500, 502, 503, 504)
+_OCR_MAX_ATTEMPTS = 5
+
 
 def _normalize_thai(text: str) -> str:
     return text.replace(_MAITAIKHU_SARA_A, _SARA_AM)
+
+
+def _unwrap_ocr_text(content: str) -> str:
+    """Typhoon OCR คืน content เป็น JSON string {"natural_text": "..."} — แกะข้อความจริงออกมา.
+
+    ถ้าไม่แกะ regex extractor (extract.py) จะพังเพราะ \\n ถูก escape เป็นตัวอักษร ไม่ใช่ขึ้นบรรทัดจริง
+    ทำให้ ^ ใน MULTILINE จับหัวข้อไม่ได้ และ LLM ได้ JSON ดิบแทนเนื้อหา
+    ถ้า content ไม่ใช่ JSON (โมเดลคืน plain text) คืนค่าเดิม
+    """
+    stripped = content.strip()
+    if not stripped.startswith("{"):
+        return content
+    try:
+        obj = json.loads(stripped)
+    except (ValueError, TypeError):
+        return content
+    if isinstance(obj, dict):
+        for key in ("natural_text", "text", "markdown", "content"):
+            value = obj.get(key)
+            if isinstance(value, str):
+                return value
+    return content
+
+
+def _retry_delay(response, attempt: int) -> float:
+    """ดีเลย์ก่อน retry: เคารพ Retry-After ถ้ามี ไม่งั้น exponential backoff + jitter (ตามที่ docs แนะนำ)."""
+    if response is not None:
+        retry_after = response.headers.get("retry-after")
+        if retry_after:
+            try:
+                return min(float(retry_after), 60.0)
+            except ValueError:
+                pass
+    return min(2 ** attempt, 30) + random.uniform(0, 1)
 
 
 def extract_text(pdf_bytes: bytes) -> str:
@@ -77,21 +120,22 @@ def _ocr_extract(pdf_bytes: bytes) -> str:
             "max_tokens": 8192,
         }
 
-        for attempt in range(3):
+        response = None
+        for attempt in range(_OCR_MAX_ATTEMPTS):
             try:
                 response = client.post(
                     "https://api.opentyphoon.ai/v1/chat/completions",
                     json=payload,
                     headers={"Authorization": f"Bearer {api_key}"},
                 )
-                if response.status_code in (429, 500, 502, 503, 504) and attempt < 2:
-                    time.sleep(2 ** attempt)
+                if response.status_code in _RETRYABLE_STATUS and attempt < _OCR_MAX_ATTEMPTS - 1:
+                    time.sleep(_retry_delay(response, attempt))
                     continue
                 response.raise_for_status()
                 break
             except httpx.TimeoutException:
-                if attempt < 2:
-                    time.sleep(2 ** attempt)
+                if attempt < _OCR_MAX_ATTEMPTS - 1:
+                    time.sleep(_retry_delay(None, attempt))
                     continue
                 raise
 
@@ -105,10 +149,12 @@ def _ocr_extract(pdf_bytes: bytes) -> str:
             raise ValueError(f"Typhoon API returned no content on page {idx + 1}: {choice}")
         if choice.get("finish_reason") == "length":
             raise ValueError(f"OCR truncated on page {idx + 1} — content exceeds max_tokens")
-        return content
+        return _unwrap_ocr_text(content)
 
+    # concurrency ต้อง ≤ 2 เพื่อไม่ละเมิด 2 RPS ของ Typhoon (ดูคอมเมนต์ค่าคงที่ด้านบน)
+    concurrency = max(1, int(os.getenv("TYPHOON_OCR_CONCURRENCY", str(_DEFAULT_OCR_CONCURRENCY))))
     with httpx.Client(timeout=60.0) as client:
-        with ThreadPoolExecutor(max_workers=min(len(images), 10)) as executor:
+        with ThreadPoolExecutor(max_workers=min(len(images), concurrency)) as executor:
             pages = list(executor.map(_ocr_one, enumerate(images)))
 
     text = _normalize_thai("\n\n".join(pages).strip())
